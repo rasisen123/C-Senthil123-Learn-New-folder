@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>International Cricket Matches - Live & Recent</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+    <h1>International Cricket Matches - Live & Recent</h1>
+    <p id="last-updated">Loading...</p>
+</header>
+
+<main>
+    <div id="matches-container" class="matches-container">
+        <p>Loading matches...</p>
+    </div>
+</main>
+
+<script>
+async function loadMatches() {
+    const container = document.getElementById("matches-container");
+    const lastUpdated = document.getElementById("last-updated");
+    container.innerHTML = "<p>Loading matches...</p>";
+
+    try {
+        const response = await fetch("/api/todays-matches");
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        const matches = await response.json();
+
+        if (!matches.length) {
+            container.innerHTML = "<p>No international matches available at the moment.</p>";
+            return;
+        }
+
+        container.innerHTML = "";
+        matches.forEach(match => {
+            const card = document.createElement("div");
+            card.className = "match-card";
+            
+            // Build series info section
+            let seriesHtml = '';
+            if (match.series_name !== '-') {
+                seriesHtml = `<p class="series-info"><strong>📋 Series:</strong> ${match.series_name}`;
+                if (match.match_number !== '-') {
+                    seriesHtml += ` (Match ${match.match_number})`;
+                }
+                seriesHtml += '</p>';
+            }
+            
+            // Build toss info section
+            let tossHtml = '';
+            if (match.toss_winner !== '-') {
+                tossHtml = `<p class="toss-info"><strong>🪙 Toss:</strong> ${match.toss_winner}`;
+                if (match.toss_decision !== '-') {
+                    tossHtml += ` - ${match.toss_decision}`;
+                }
+                tossHtml += '</p>';
+            }
+            
+            // Build officials section
+            let officialsHtml = '';
+            if (match.umpires !== '-' || match.match_referee !== '-') {
+                officialsHtml = '<div class="officials-section">';
+                if (match.umpires !== '-') {
+                    officialsHtml += `<p><strong>👨‍⚖️ Umpires:</strong> ${match.umpires}</p>`;
+                }
+                if (match.match_referee !== '-') {
+                    officialsHtml += `<p><strong>🎯 Match Referee:</strong> ${match.match_referee}</p>`;
+                }
+                officialsHtml += '</div>';
+            }
+            
+            // Build awards section if any awards are available
+            let awardsHtml = '';
+            const hasAwards = match.man_of_match !== '-' || match.man_of_series !== '-' || 
+                            match.best_batsman !== '-' || match.best_bowler !== '-';
+            
+            if (hasAwards) {
+                awardsHtml = '<div class="awards-section"><h3>🏆 Awards & Top Performers</h3>';
+                if (match.man_of_match !== '-') {
+                    awardsHtml += `<p><strong>🏆 Man of the Match:</strong> ${match.man_of_match}</p>`;
+                }
+                if (match.man_of_series !== '-') {
+                    awardsHtml += `<p><strong>🏅 Man of the Series:</strong> ${match.man_of_series}</p>`;
+                }
+                if (match.best_batsman !== '-') {
+                    awardsHtml += `<p><strong>🏏 Best Batsman:</strong> ${match.best_batsman}</p>`;
+                }
+                if (match.best_bowler !== '-') {
+                    awardsHtml += `<p><strong>⚡ Best Bowler:</strong> ${match.best_bowler}</p>`;
+                }
+                awardsHtml += '</div>';
+            }
+            
+            card.innerHTML = `
+                <h2>${match.team1} vs ${match.team2}</h2>
+                ${seriesHtml}
+                <p><strong>Format:</strong> ${match.match_format}</p>
+                <p><strong>Start:</strong> ${match.start_time}</p>
+                <p><strong>Venue:</strong> ${match.venue}</p>
+                <p><strong>Status:</strong> ${match.status}</p>
+                <p><strong>Score:</strong> ${match.score_summary}</p>
+                ${tossHtml}
+                ${officialsHtml}
+                ${awardsHtml}
+            `;
+            container.appendChild(card);
+        });
+
+        const now = new Date();
+        lastUpdated.textContent = "Last updated: " + now.toLocaleTimeString();
+    } catch (err) {
+        container.innerHTML = "<p>Error loading matches.</p>";
+        console.error(err);
+    }
+}
+
+// Initial load
+loadMatches();
+
+// Optional: refresh every 2 minutes (120000 ms)
+setInterval(loadMatches, 120000);
+</script>
+</body>
+</html>

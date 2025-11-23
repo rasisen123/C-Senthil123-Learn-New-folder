@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: cricket-stats-app
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: CRICKET_API_KEY
+        value: 48e8c9c5-77c8-45f7-bda6-f5555f4c9dc2
