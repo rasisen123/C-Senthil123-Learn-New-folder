@@ -37,12 +37,16 @@ class Match(BaseModel):
     toss_decision: str = "-"
     umpires: str = "-"
     match_referee: str = "-"
+    match_url: str = "-"
+    scorecard_url: str = "-"
+    detailed_score: dict = {}  # Full scorecard data
 
 
 # Fetch real cricket match data from cricapi.com (free tier)
 # You can get a free API key from: https://www.cricapi.com/
 # For now, this uses a demo approach. Replace with your actual API key.
 CRICKET_API_KEY = "48e8c9c5-77c8-45f7-bda6-f5555f4c9dc2"  # Replace with actual key from cricapi.com
+# Note: CricAPI v1 endpoint - make sure the URL is correct
 CRICKET_API_URL = "https://api.cricapi.com/v1/currentMatches"
 
 
@@ -56,20 +60,35 @@ async def get_last_24h_matches() -> List[Match]:
     
     try:
         # Fetch current matches from cricket API
+        print(f"Fetching from: {CRICKET_API_URL}")
+        print(f"Using API Key: {CRICKET_API_KEY[:10]}...")
+        
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(
                 CRICKET_API_URL,
-                params={"apikey": CRICKET_API_KEY, "offset": 0}
+                params={"apikey": CRICKET_API_KEY}
             )
+            
+            print(f"Response Status: {response.status_code}")
             
             if response.status_code != 200:
                 print(f"API Error: {response.status_code}")
+                print(f"Response Text: {response.text}")
                 return matches
             
             data = response.json()
+            print(f"API Response Keys: {data.keys()}")
+            
+            # Check for API errors
+            if "error" in data or "statusCode" in data:
+                print(f"API Error Response: {data}")
+                return matches
             
             if not data.get("data"):
+                print(f"No data returned from API. Full response: {data}")
                 return matches
+            
+            print(f"Found {len(data.get('data', []))} matches from API")
             
             now = datetime.utcnow()
             
@@ -154,10 +173,18 @@ async def get_last_24h_matches() -> List[Match]:
                 else:
                     match_status = "Scheduled"
                 
-                # Get score summary
+                # Get score summary and detailed score
                 score = match_data.get("score", [])
+                detailed_score = {}
+                
                 if score:
                     score_summary = " | ".join([f"{s.get('inning', '')}: {s.get('r', 0)}/{s.get('w', 0)} ({s.get('o', 0)} ov)" for s in score])
+                    # Store detailed score for expandable view
+                    detailed_score = {
+                        "innings": score,
+                        "scorecard": match_data.get("scorecard", []),
+                        "teamInfo": match_data.get("teamInfo", [])
+                    }
                 else:
                     score_summary = status if status else "-"
                 
@@ -220,6 +247,42 @@ async def get_last_24h_matches() -> List[Match]:
                 umpires = ", ".join(umpires_list) if umpires_list else "-"
                 match_referee = match_data.get("referee", "-")
                 
+                # Extract match URLs for scorecard
+                # Try multiple possible field names from API
+                match_id = match_data.get("id", "")
+                match_url = (
+                    match_data.get("matchUrl") or 
+                    match_data.get("url") or 
+                    match_data.get("link") or
+                    ""
+                )
+                scorecard_url = (
+                    match_data.get("scorecardUrl") or 
+                    match_data.get("scorecard") or
+                    ""
+                )
+                
+                # If API provides match ID, try to construct ESPN Cricinfo URL
+                if not scorecard_url and match_id:
+                    # ESPN Cricinfo URL format: /series/[series-id]/[match-name]-[match-id]/full-scorecard
+                    # Since we don't have series ID, use the match ID in a generic format
+                    scorecard_url = f"https://www.espncricinfo.com/series/0/scorecard/{match_id}"
+                
+                # If still no URL, construct based on match name
+                if not scorecard_url:
+                    # Create a clean match identifier
+                    team1_slug = team1.lower().replace(" ", "-")
+                    team2_slug = team2.lower().replace(" ", "-")
+                    date_slug = match_time.strftime("%Y-%m-%d")
+                    format_slug = match_type.lower()
+                    
+                    # Use Cricbuzz as alternative (more reliable URL structure)
+                    scorecard_url = f"https://www.cricbuzz.com/cricket-scores/{team1_slug}-vs-{team2_slug}-{format_slug}-{date_slug}"
+                
+                # Use scorecard URL for match URL if not provided
+                if not match_url:
+                    match_url = scorecard_url
+                
                 matches.append(Match(
                     id=idx + 1,
                     team1=team1,
@@ -238,7 +301,10 @@ async def get_last_24h_matches() -> List[Match]:
                     toss_winner=toss_winner,
                     toss_decision=toss_decision,
                     umpires=umpires,
-                    match_referee=match_referee
+                    match_referee=match_referee,
+                    match_url=match_url,
+                    scorecard_url=scorecard_url,
+                    detailed_score=detailed_score
                 ))
                 
     except Exception as e:

@@ -90,3 +90,125 @@ main {
     color: #333;
     font-size: 0.95rem;
 }
+
+.scorecard-link {
+    margin: 1rem 0;
+    text-align: center;
+}
+
+.btn-scorecard {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.btn-scorecard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.detailed-scorecard {
+    margin: 1rem 0;
+}
+
+.btn-expand-scorecard {
+    width: 100%;
+    padding: 0.75rem;
+    background: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-expand-scorecard:hover {
+    background: #45a049;
+    transform: scale(1.02);
+}
+
+.scorecard-details {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f9f9f9;
+    border-radius: 6px;
+    border-left: 4px solid #4caf50;
+}
+
+.scorecard-details.hidden {
+    display: none;
+}
+
+.innings-section {
+    margin: 0.75rem 0;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+}
+
+.innings-section h4 {
+    margin: 0 0 0.5rem 0;
+    color: #4caf50;
+    font-size: 1rem;
+}
+
+.innings-score {
+    margin: 0.25rem 0 1rem 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.batting-stats, .bowling-stats {
+    margin: 1rem 0;
+}
+
+.batting-stats h5, .bowling-stats h5 {
+    margin: 0.5rem 0;
+    color: #2196f3;
+    font-size: 0.95rem;
+}
+
+.player-stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.player-stats-table thead {
+    background: #2196f3;
+    color: white;
+}
+
+.player-stats-table th {
+    padding: 0.5rem;
+    text-align: left;
+    font-weight: bold;
+}
+
+.player-stats-table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.player-stats-table tbody tr:hover {
+    background: #f5f5f5;
+}
+
+.player-stats-table tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+
+.player-stats-table tbody tr:nth-child(even):hover {
+    background: #f0f0f0;
+}

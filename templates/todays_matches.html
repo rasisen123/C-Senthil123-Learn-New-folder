@@ -95,6 +95,66 @@ async function loadMatches() {
                 awardsHtml += '</div>';
             }
             
+            // Build detailed scorecard section (expandable)
+            let detailedScorecardHtml = '';
+            if (match.detailed_score && match.detailed_score.innings && match.detailed_score.innings.length > 0) {
+                detailedScorecardHtml = '<div class="detailed-scorecard">';
+                detailedScorecardHtml += '<button class="btn-expand-scorecard" onclick="this.nextElementSibling.classList.toggle(\'hidden\')">📋 Show Full Scorecard with Player Stats</button>';
+                detailedScorecardHtml += '<div class="scorecard-details hidden">';
+                
+                match.detailed_score.innings.forEach((innings, idx) => {
+                    detailedScorecardHtml += `<div class="innings-section">`;
+                    detailedScorecardHtml += `<h4>${innings.inning || 'Innings ' + (idx + 1)}</h4>`;
+                    detailedScorecardHtml += `<p class="innings-score"><strong>Total Score:</strong> ${innings.r}/${innings.w} (${innings.o} overs)</p>`;
+                    
+                    // Add batting stats if available
+                    if (innings.batting && innings.batting.length > 0) {
+                        detailedScorecardHtml += '<div class="batting-stats">';
+                        detailedScorecardHtml += '<h5>🏏 Batting</h5>';
+                        detailedScorecardHtml += '<table class="player-stats-table">';
+                        detailedScorecardHtml += '<thead><tr><th>Player</th><th>Runs</th><th>Balls</th><th>4s</th><th>6s</th><th>SR</th></tr></thead>';
+                        detailedScorecardHtml += '<tbody>';
+                        innings.batting.forEach(player => {
+                            const sr = player.b > 0 ? ((player.r / player.b) * 100).toFixed(1) : '0.0';
+                            detailedScorecardHtml += `<tr>
+                                <td>${player.name || 'Unknown'}</td>
+                                <td><strong>${player.r || 0}</strong></td>
+                                <td>${player.b || 0}</td>
+                                <td>${player['4s'] || 0}</td>
+                                <td>${player['6s'] || 0}</td>
+                                <td>${sr}</td>
+                            </tr>`;
+                        });
+                        detailedScorecardHtml += '</tbody></table></div>';
+                    }
+                    
+                    // Add bowling stats if available
+                    if (innings.bowling && innings.bowling.length > 0) {
+                        detailedScorecardHtml += '<div class="bowling-stats">';
+                        detailedScorecardHtml += '<h5>⚡ Bowling</h5>';
+                        detailedScorecardHtml += '<table class="player-stats-table">';
+                        detailedScorecardHtml += '<thead><tr><th>Player</th><th>Overs</th><th>Maidens</th><th>Runs</th><th>Wickets</th><th>Econ</th></tr></thead>';
+                        detailedScorecardHtml += '<tbody>';
+                        innings.bowling.forEach(player => {
+                            const econ = player.o > 0 ? (player.r / player.o).toFixed(2) : '0.00';
+                            detailedScorecardHtml += `<tr>
+                                <td>${player.name || 'Unknown'}</td>
+                                <td>${player.o || 0}</td>
+                                <td>${player.m || 0}</td>
+                                <td>${player.r || 0}</td>
+                                <td><strong>${player.w || 0}</strong></td>
+                                <td>${econ}</td>
+                            </tr>`;
+                        });
+                        detailedScorecardHtml += '</tbody></table></div>';
+                    }
+                    
+                    detailedScorecardHtml += `</div>`;
+                });
+                
+                detailedScorecardHtml += '</div></div>';
+            }
+            
             card.innerHTML = `
                 <h2>${match.team1} vs ${match.team2}</h2>
                 ${seriesHtml}
@@ -104,6 +164,7 @@ async function loadMatches() {
                 <p><strong>Status:</strong> ${match.status}</p>
                 <p><strong>Score:</strong> ${match.score_summary}</p>
                 ${tossHtml}
+                ${detailedScorecardHtml}
                 ${officialsHtml}
                 ${awardsHtml}
             `;
