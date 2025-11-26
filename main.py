@@ -99,22 +99,25 @@ async def get_last_24h_matches() -> List[Match]:
                 if match_type not in ["test", "odi", "t20", "t20i"]:
                     continue
                 
-                # Additional filter: Exclude domestic/league matches
-                # Check match name for common domestic league indicators
+                # FILTER: Show ONLY International Cricket (Men's & Women's)
+                # Exclude ALL domestic leagues
+                
+                # Get match details for filtering
                 match_name = match_data.get("name", "").lower()
                 series_name = match_data.get("series", "").lower()
-                
-                # Get team names to check for state/provincial teams
                 teams = match_data.get("teams", [])
                 team1_lower = teams[0].lower() if len(teams) > 0 else ""
                 team2_lower = teams[1].lower() if len(teams) > 1 else ""
                 
-                # Skip if it's a domestic league (IPL, BBL, PSL, CPL, etc.)
+                # Skip ALL domestic leagues
                 domestic_keywords = [
-                    "ipl", "bbl", "psl", "cpl", "bpl", "lpl", "msl", "t10",
+                    "ipl", "bbl", "psl", "cpl", "bpl", "lpl", "msl", "t10", "wpl",
                     "premier league", "super league", "bash", "vitality",
                     "hundred", "county", "shield", "trophy", "ranji",
-                    "duleep", "vijay hazare", "syed mushtaq", "plunket"
+                    "duleep", "vijay hazare", "syed mushtaq", "plunket",
+                    "hurricanes", "sixers", "thunder", "scorchers", "renegades",
+                    "strikers", "stars", "heat", "royals", "knights", "capitals",
+                    "kings", "titans", "giants", "riders", "warriors"
                 ]
                 
                 # Australian state teams
@@ -149,6 +152,7 @@ async def get_last_24h_matches() -> List[Match]:
                 is_domestic = any(keyword in match_name or keyword in series_name 
                                  for keyword in domestic_keywords)
                 
+                # Skip if domestic or state match
                 if is_domestic or is_state_match:
                     continue
                 
